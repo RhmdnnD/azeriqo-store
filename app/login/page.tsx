@@ -2,7 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { LogIn, Loader2, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { LogIn, Loader2, Eye, EyeOff, Mail, Lock, User, ArrowLeft } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -60,8 +60,19 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center animate-in fade-in duration-700">
       <div className="w-full max-w-md px-4">
+        <div className="mb-4">
+          <button
+            onClick={() => router.push("/")}
+            className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+          >
+            <ArrowLeft size={16} />
+            Back to Home
+          </button>
+        </div>
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Azeriqo Store</h1>
+          <button onClick={() => router.push("/")} className="hover:opacity-80 transition-opacity">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Azeriqo Store</h1>
+          </button>
           <p className="text-slate-500 dark:text-slate-400 mt-2">{isRegister ? "Create an account" : "Sign in to your account"}</p>
         </div>
 

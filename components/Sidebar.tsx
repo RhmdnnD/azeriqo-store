@@ -112,6 +112,17 @@ export default function Sidebar() {
           <Folder size={18} />
           Categories
         </button>
+        <button
+          onClick={() => router.push("/profile")}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+            pathname === "/profile"
+              ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+          }`}
+        >
+          <User size={18} />
+          Profile
+        </button>
       </nav>
 
       {/* Bottom actions */}
