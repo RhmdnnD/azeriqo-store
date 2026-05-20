@@ -5,14 +5,11 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { 
   Plus, 
-  Copy, 
   RefreshCw, 
   Edit2, 
   Trash2, 
   Check, 
   Search,
-  ShoppingCart,
-  Shield,
   User,
   Lock,
   Loader2,
@@ -314,125 +311,80 @@ export default function AccountStore() {
               <p>Loading accounts from database...</p>
             </div>
           ) : visibleAccounts.length > 0 ? (
-            <div className="space-y-10">
+            <div className="space-y-6">
               {groupOrder.map(([key, { category, accounts: groupAccounts }]) => (
-                <section key={key}>
-                  <div className="flex items-center gap-3 mb-4">
-                    {category ? (
-                      <>
-                        <Folder size={20} className="text-indigo-500" />
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">{category.name}</h2>
-                      </>
-                    ) : (
-                      <>
-                        <Folder size={20} className="text-slate-400" />
-                        <h2 className="text-xl font-bold text-slate-500 dark:text-slate-400">Uncategorized</h2>
-                      </>
-                    )}
-                    <span className="text-xs text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">
-                      {groupAccounts.length} account{groupAccounts.length !== 1 ? "s" : ""}
+                <section 
+                  key={key} 
+                  className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden shadow-sm"
+                >
+                  {/* Category Header */}
+                  <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-2">
+                      <Folder size={18} className={category ? "text-indigo-400" : "text-slate-400"} />
+                      <h2 className="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">
+                        {category ? category.name : "UNCATEGORIZED"}
+                      </h2>
+                    </div>
+                    <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 rounded-full">
+                      {groupAccounts.length} ITEMS
                     </span>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  {/* Accounts Grid */}
+                  <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {groupAccounts.map(account => (
                       <div 
                         key={account.id}
-                        className={`group bg-white dark:bg-slate-800 border ${account.status === 'sold' ? 'opacity-75' : 'border-slate-200 dark:border-slate-700'} p-2.5 rounded-xl shadow-sm hover:shadow-md dark:hover:shadow-slate-900/50 transition-all border-l-4 ${account.status === 'available' ? 'border-l-emerald-500' : 'border-l-slate-400 dark:border-l-slate-600'}`}
+                        className={`bg-white dark:bg-slate-800 border ${account.status === 'sold' ? 'opacity-50' : ''} border-slate-200 dark:border-slate-700 p-3 rounded-xl flex flex-col gap-2 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all`}
                       >
-                        <div className="flex justify-between items-start mb-1.5">
-                          <div>
-                            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                              {account.username}
-                              {account.status === 'sold' && (
-                                <span className="text-[8px] font-bold uppercase tracking-widest bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">
-                                  Sold
-                                </span>
-                              )}
-                            </h3>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              {account.category && (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-full">
-                                  <Folder size={10} />
-                                  {account.category.name}
-                                </span>
-                              )}
-                              <p className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(account.createdAt).toLocaleDateString()}</p>
-                            </div>
-                          </div>
-                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {canEdit && (
-                              <button 
-                                onClick={() => handleEdit(account)}
-                                className="p-1 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors"
-                                title="Edit"
-                              >
-                                <Edit2 size={14} />
-                              </button>
-                            )}
-                            {canDelete && (
-                              <button 
-                                onClick={() => handleDelete(account.id)}
-                                className="p-1 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors"
-                                title="Delete"
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            )}
-                          </div>
+                        <div className="font-mono text-[13px] font-semibold text-slate-800 dark:text-slate-100 truncate">
+                          {account.username} <span className="text-slate-300 dark:text-slate-600 font-normal mx-1">|</span> {account.password}
                         </div>
 
-                        <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-1.5 rounded-lg text-[11px]">
-                          <span className="text-slate-600 dark:text-slate-400 truncate font-mono">
-                            usn: {account.username} || pass: ••••••••
-                          </span>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {canToggle && (
+                            <button 
+                              onClick={() => toggleStatus(account)}
+                              className="flex items-center gap-1 px-2.5 py-1.5 border border-emerald-500 dark:border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg text-[11px] font-bold tracking-wider transition-colors"
+                            >
+                              {account.status === 'available' ? (
+                                <><Check size={12} strokeWidth={3} /> SELL</>
+                              ) : (
+                                <><RefreshCw size={12} strokeWidth={3} /> RESTORE</>
+                              )}
+                            </button>
+                          )}
                           <button
                             onClick={() => {
-                              const text = `usn: ${account.username} || pass: ${account.password}`;
+                              const text = `${account.username} | ${account.password}`;
                               navigator.clipboard.writeText(text);
                               setCopyStatus({ ...copyStatus, [account.id]: true });
                               setTimeout(() => setCopyStatus({ ...copyStatus, [account.id]: false }), 2000);
                             }}
-                            className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-100 dark:bg-indigo-900/40 hover:bg-indigo-200 dark:hover:bg-indigo-800/50 text-indigo-700 dark:text-indigo-300 rounded-lg font-medium flex-shrink-0 ml-2 transition-colors"
+                            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wider transition-all ${
+                              copyStatus[account.id]
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm'
+                            }`}
                           >
-                            {copyStatus[account.id] ? <Check size={14} /> : <Copy size={14} />}
-                            <span className="text-[11px]">{copyStatus[account.id] ? "Copied" : "Copy"}</span>
+                            {copyStatus[account.id] ? "COPIED ✓" : "COPY"}
                           </button>
-                        </div>
-
-                        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                          {canToggle ? (
+                          {canEdit && (
                             <button 
-                              onClick={() => toggleStatus(account)}
-                              className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold transition-all ${
-                                account.status === 'available' 
-                                  ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50' 
-                                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
-                              }`}
+                              onClick={() => handleEdit(account)}
+                              className="p-1.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors"
                             >
-                              {account.status === 'available' ? (
-                                <><ShoppingCart size={11} /> Mark as Sold</>
-                              ) : (
-                                <><RefreshCw size={11} /> Put Back to Sale</>
-                              )}
+                              <Edit2 size={14} />
                             </button>
-                          ) : (
-                            <span className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold ${
-                              account.status === 'available' 
-                                ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' 
-                                : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
-                            }`}>
-                              {account.status === 'available' ? (
-                                <><ShoppingCart size={11} /> Available</>
-                              ) : (
-                                <><RefreshCw size={11} /> Sold</>
-                              )}
-                            </span>
                           )}
-                          
-                          <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500 text-[10px]">
-                            <Shield size={11} />
-                            <span>Secure</span>
-                          </div>
+                          {canDelete && (
+                            <button 
+                              onClick={() => handleDelete(account.id)}
+                              className="p-1.5 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg transition-colors"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -441,13 +393,13 @@ export default function AccountStore() {
               ))}
             </div>
           ) : (
-            <div className="py-20 text-center bg-white dark:bg-slate-800 border border-dashed border-slate-300 dark:border-slate-600 rounded-3xl">
-              <div className="mx-auto w-16 h-16 bg-slate-50 dark:bg-slate-700 rounded-2xl flex items-center justify-center text-slate-300 dark:text-slate-500 mb-4">
-                <Shield size={32} />
-              </div>
-              <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">No accounts found</h3>
-              <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
-                {searchTerm ? "Try adjusting your search" : "Start by adding your first account to the store."}
+              <div className="py-20 text-center bg-white dark:bg-slate-800 border border-dashed border-slate-300 dark:border-slate-600 rounded-3xl">
+                <div className="mx-auto w-16 h-16 bg-slate-50 dark:bg-slate-700 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4">
+                  <Folder size={32} />
+                </div>
+                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">No accounts found</h3>
+                <p className="text-slate-500 dark:text-slate-400 max-w-xs mx-auto mt-1">
+                {searchTerm ? "Try adjusting your search term." : "Start by adding your first account to the store."}
               </p>
             </div>
           )}
