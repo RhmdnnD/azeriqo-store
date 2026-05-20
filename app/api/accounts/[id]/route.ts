@@ -1,10 +1,16 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await getCurrentUser();
+  if (!user || (user.role !== "ADMIN" && user.role !== "WORKER")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const body = await request.json();
     const resolvedParams = await params;
@@ -13,6 +19,7 @@ export async function PUT(
     const account = await prisma.account.update({
       where: { id },
       data: body,
+      include: { category: { select: { id: true, name: true } } },
     });
     return NextResponse.json(account);
   } catch (error) {
@@ -25,6 +32,11 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const resolvedParams = await params;
     const { id } = resolvedParams;
