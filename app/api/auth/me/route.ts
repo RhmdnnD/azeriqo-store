@@ -11,5 +11,6 @@ export async function GET() {
     name: user.name,
     email: user.email,
     role: user.role,
+    emailVerified: user.emailVerified?.toISOString() ?? null,
   });
 }

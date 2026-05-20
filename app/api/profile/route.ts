@@ -12,6 +12,7 @@ export async function GET() {
     name: user.name,
     email: user.email,
     role: user.role,
+    emailVerified: user.emailVerified?.toISOString() ?? null,
   });
 }
 
@@ -63,6 +64,7 @@ export async function PUT(request: Request) {
       name: updated.name,
       email: updated.email,
       role: updated.role,
+      emailVerified: updated.emailVerified?.toISOString() ?? null,
     });
   } catch {
     return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });

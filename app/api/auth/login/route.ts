@@ -14,6 +14,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
+    if (!user.emailVerified) {
+      return NextResponse.json({
+        error: "Email not verified",
+        needsVerification: true,
+        email: user.email,
+      }, { status: 403 });
+    }
+
     const token = await createSession(user.id);
     const response = NextResponse.json({
       user: { id: user.id, name: user.name, email: user.email, role: user.role },

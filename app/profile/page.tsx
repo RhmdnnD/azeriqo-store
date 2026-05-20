@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
-import { User, Mail, Lock, Save, Loader2, Eye, EyeOff, Check, Shield, KeyRound } from "lucide-react";
+import { User, Mail, Lock, Save, Loader2, Eye, EyeOff, Check, Shield, KeyRound, Send, ShieldCheck } from "lucide-react";
 
 interface UserData {
   id: string;
   name: string;
   email: string;
   role: "ADMIN" | "WORKER" | "USER";
+  emailVerified: string | null;
 }
 
 export default function ProfilePage() {
@@ -27,6 +28,8 @@ export default function ProfilePage() {
 
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verifyMsg, setVerifyMsg] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -87,6 +90,25 @@ export default function ProfilePage() {
       setError(err instanceof Error ? err.message : "Failed to update profile");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSendVerification = async () => {
+    setVerifying(true);
+    setVerifyMsg("");
+    try {
+      const res = await fetch("/api/auth/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user?.email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send code");
+      setVerifyMsg(data.devCode ? `Dev code: ${data.devCode}` : "Verification code sent! Check your email.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send verification");
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -166,6 +188,40 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+
+            {/* Email Verification */}
+            {!user.emailVerified && (
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 space-y-4">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                  <ShieldCheck size={16} />
+                  Email Verification
+                </h2>
+                <p className="text-xs text-slate-400 dark:text-slate-500 -mt-2">
+                  Your email is not yet verified. Verify to access your account.
+                </p>
+                {verifyMsg && (
+                  <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 text-sm rounded-xl px-4 py-3">
+                    {verifyMsg}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSendVerification}
+                    disabled={verifying}
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                  >
+                    {verifying ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
+                    {verifying ? "Sending..." : "Send Verification Code"}
+                  </button>
+                  <button
+                    onClick={() => router.push(`/verify-email?email=${encodeURIComponent(user.email)}`)}
+                    className="flex items-center gap-2 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+                  >
+                    Enter Code
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Change Password */}
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 space-y-4">

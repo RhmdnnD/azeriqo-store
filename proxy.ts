@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const publicPaths = ["/", "/login", "/api/auth/login", "/api/auth/register", "/api/stats"];
+const publicPaths = ["/", "/login", "/verify-email", "/api/auth/login", "/api/auth/register", "/api/auth/send-verification", "/api/auth/verify-email", "/api/stats"];
 
 export function proxy(request: NextRequest) {
   const sessionToken = request.cookies.get("session_token")?.value;

@@ -19,7 +19,7 @@ npx prisma migrate dev   # creates dev.db SQLite file
 - `npm run start` — production server
 - `npm run lint` — ESLint (flat config at `eslint.config.mjs`)
 - `npx prisma studio` — browse DB in browser
-- `npx prisma db seed` — seed DB with sample users (admin@azeriqo.com/admin123, worker@azeriqo.com/worker123, user@azeriqo.com/user123)
+- `npx prisma db seed` — reports DB state (no pre-seeded users; first registration gets ADMIN)
 
 No test runner, no formatter, no pre-commit hooks are configured.
 
@@ -35,7 +35,8 @@ No test runner, no formatter, no pre-commit hooks are configured.
 - Single-page CRUD app (no routing beyond `/`). Page is a client component (`"use client"` in `app/page.tsx`).
 - API routes at `app/api/accounts/route.ts` (GET/POST) and `app/api/accounts/[id]/route.ts` (PUT/DELETE).
 - No schema validation on API routes (raw JSON accepted).
-- Auth: 3 roles (ADMIN / WORKER / USER). Session-based auth with httpOnly cookies. `lib/auth.ts` handles hashing (`crypto.scryptSync`) and session management. `proxy.ts` redirects unauthenticated requests to `/login`.
+- Auth: 3 roles (ADMIN / WORKER / USER). First registration gets ADMIN. Session-based auth with httpOnly cookies. `lib/auth.ts` handles hashing (`crypto.scryptSync`) and session management. `proxy.ts` redirects unauthenticated requests to `/login`.
+- Email verification via SMTP (Gmail/Outlook). Configure in `.env`. Falls back to dev code in console if SMTP not set.
 - No auth, no middleware, no data fetching library — raw `fetch()` with React local state.
 - `lib/prisma.ts` caches a single PrismaClient instance on `globalThis`.
 - `dev.db` is committed to git (not in `.gitignore`).

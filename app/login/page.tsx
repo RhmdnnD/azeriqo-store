@@ -46,6 +46,16 @@ function LoginForm() {
 
       if (!res.ok) {
         const data = await res.json();
+        if (data.needsVerification) {
+          // Auto-send verification code for both new and existing users
+          await fetch("/api/auth/send-verification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: form.email }),
+          });
+          router.push(`/verify-email?email=${encodeURIComponent(form.email)}`);
+          return;
+        }
         throw new Error(data.error || "Login failed");
       }
 
