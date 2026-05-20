@@ -64,7 +64,12 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 h-full w-56 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 flex flex-col z-50">
       {/* Logo */}
       <div className="px-5 py-6 border-b border-slate-200 dark:border-slate-700">
-        <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">Azeriqo Store</h1>
+        <button
+          onClick={() => router.push("/")}
+          className="text-lg font-bold tracking-tight text-slate-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+        >
+          Azeriqo Store
+        </button>
       </div>
 
       {/* User info */}
@@ -86,9 +91,9 @@ export default function Sidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">
         <button
-          onClick={() => router.push("/")}
+          onClick={() => router.push("/store")}
           className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            pathname === "/"
+            pathname === "/store"
               ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
               : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50"
           }`}

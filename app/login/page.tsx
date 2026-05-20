@@ -7,7 +7,7 @@ import { LogIn, Loader2, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get("redirect") || "/";
+  const redirect = searchParams.get("redirect") || "/store";
 
   const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
