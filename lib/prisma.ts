@@ -1,12 +1,19 @@
 import { PrismaClient } from '@prisma/client'
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
-
-// Inisialisasi adapter dengan menunjuk file database SQLite lokal Anda
-const adapter = new PrismaBetterSqlite3({ url: 'file:./dev.db' })
+import { PrismaLibSql } from '@prisma/adapter-libsql'
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
 
-// Masukkan adapter tersebut ke dalam parameter PrismaClient
-export const prisma = globalForPrisma.prisma || new PrismaClient({ adapter })
+function createPrismaClient() {
+  const url = process.env["TURSO_DATABASE_URL"] || "file:./dev.db";
+  const authToken = process.env["TURSO_AUTH_TOKEN"];
+
+  const adapter = new PrismaLibSql({
+    url,
+    authToken: authToken || undefined,
+  });
+  return new PrismaClient({ adapter });
+}
+
+export const prisma = globalForPrisma.prisma || createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

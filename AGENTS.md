@@ -6,11 +6,28 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # azeriqo-store — account credentials manager
 
-## First-time setup (in order)
+## First-time setup (local)
 ```bash
 npm install
 npx prisma generate
 npx prisma migrate dev   # creates dev.db SQLite file
+```
+
+## Production database (Turso — SQLite cloud for Vercel)
+```bash
+# 1. Install Turso CLI
+curl -sSfL https://get.tur.so/install.sh | sh
+
+# 2. Login & create database
+turso auth login
+turso db create azeriqo-store
+
+# 3. Get credentials
+turso db show azeriqo-store --url         # → TURSO_DATABASE_URL
+turso db tokens create azeriqo-store      # → TURSO_AUTH_TOKEN
+
+# 4. Push schema
+npx prisma db push
 ```
 
 ## Dev commands
@@ -28,7 +45,7 @@ No test runner, no formatter, no pre-commit hooks are configured.
 - **Next.js 16 proxy** — `middleware.ts` is deprecated; use `proxy.ts` with `export function proxy(...)`.
 - **Tailwind v4** uses `@import "tailwindcss"` + `@theme` block (NOT `@tailwind` directives).
 - **PostCSS config** is ESM (`postcss.config.mjs`).
-- **Prisma 7** uses `prisma.config.ts` with `defineConfig` + `@prisma/adapter-better-sqlite3` driver adapter. `DATABASE_URL` comes from `process.env["DATABASE_URL"]` in the config file, not the schema. Seed command goes in `prisma.config.ts` under `migrations.seed`.
+- **Prisma 7** uses `prisma.config.ts` with `defineConfig` + `@prisma/adapter-libsql` driver adapter for production (Turso). For local dev, falls back to SQLite `dev.db`. `DATABASE_URL` comes from `process.env["DATABASE_URL"]` in the config file, not the schema. Seed command goes in `prisma.config.ts` under `migrations.seed`.
 - **ESLint** uses flat config at `eslint.config.mjs` with presets `core-web-vitals` + `typescript`.
 
 ## Architecture

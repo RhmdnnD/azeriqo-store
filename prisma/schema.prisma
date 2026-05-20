@@ -32,13 +32,14 @@ model User {
   id             String             @id @default(cuid())
   name           String
   email          String             @unique
-  password       String
+  password       String?
   role           String             @default("USER")
   emailVerified  DateTime?
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
   sessions       Session[]
   verificationCodes VerificationCode[]
+  oauthAccounts  OAuthAccount[]
 }
 
 model VerificationCode {
@@ -50,6 +51,18 @@ model VerificationCode {
   used      Boolean  @default(false)
   createdAt DateTime @default(now())
 
+  @@index([userId])
+}
+
+model OAuthAccount {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider   String
+  providerId String
+  createdAt  DateTime @default(now())
+
+  @@unique([provider, providerId])
   @@index([userId])
 }
 

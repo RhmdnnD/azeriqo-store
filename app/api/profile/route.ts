@@ -44,6 +44,9 @@ export async function PUT(request: Request) {
       if (!currentPassword) {
         return NextResponse.json({ error: "Current password is required" }, { status: 400 });
       }
+      if (!user.password) {
+        return NextResponse.json({ error: "Set a password first via Forgot Password" }, { status: 400 });
+      }
       if (!verifyPassword(currentPassword, user.password)) {
         return NextResponse.json({ error: "Current password is incorrect" }, { status: 403 });
       }
