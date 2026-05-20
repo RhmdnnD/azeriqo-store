@@ -177,12 +177,6 @@ export default function AccountStore() {
     }
   };
 
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopyStatus({ ...copyStatus, [id]: true });
-    setTimeout(() => setCopyStatus({ ...copyStatus, [id]: false }), 2000);
-  };
-
   const visibleAccounts = accounts.filter(acc => {
     const term = searchTerm.toLowerCase();
     return !term || acc.username.toLowerCase().includes(term) ||
@@ -343,103 +337,101 @@ export default function AccountStore() {
                     {groupAccounts.map(account => (
                       <div 
                         key={account.id}
-                        className={`group bg-white dark:bg-slate-800 border ${account.status === 'sold' ? 'opacity-75' : 'border-slate-200 dark:border-slate-700'} p-5 rounded-2xl shadow-sm hover:shadow-md dark:hover:shadow-slate-900/50 transition-all border-l-4 ${account.status === 'available' ? 'border-l-emerald-500' : 'border-l-slate-400 dark:border-l-slate-600'}`}
+                        className={`group bg-white dark:bg-slate-800 border ${account.status === 'sold' ? 'opacity-75' : 'border-slate-200 dark:border-slate-700'} p-2.5 rounded-xl shadow-sm hover:shadow-md dark:hover:shadow-slate-900/50 transition-all border-l-4 ${account.status === 'available' ? 'border-l-emerald-500' : 'border-l-slate-400 dark:border-l-slate-600'}`}
                       >
-                        <div className="flex justify-between items-start mb-4">
+                        <div className="flex justify-between items-start mb-1.5">
                           <div>
-                            <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
                               {account.username}
                               {account.status === 'sold' && (
-                                <span className="text-[10px] font-bold uppercase tracking-widest bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full">
+                                <span className="text-[8px] font-bold uppercase tracking-widest bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-1.5 py-0.5 rounded-full">
                                   Sold
                                 </span>
                               )}
                             </h3>
-                            <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Added {new Date(account.createdAt).toLocaleDateString()}</p>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {account.category && (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded-full">
+                                  <Folder size={10} />
+                                  {account.category.name}
+                                </span>
+                              )}
+                              <p className="text-[10px] text-slate-400 dark:text-slate-500">{new Date(account.createdAt).toLocaleDateString()}</p>
+                            </div>
                           </div>
-                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                             {canEdit && (
                               <button 
                                 onClick={() => handleEdit(account)}
-                                className="p-1.5 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors"
+                                className="p-1 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg transition-colors"
                                 title="Edit"
                               >
-                                <Edit2 size={16} />
+                                <Edit2 size={14} />
                               </button>
                             )}
                             {canDelete && (
                               <button 
                                 onClick={() => handleDelete(account.id)}
-                                className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors"
+                                className="p-1 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg transition-colors"
                                 title="Delete"
                               >
-                                <Trash2 size={16} />
+                                <Trash2 size={14} />
                               </button>
                             )}
                           </div>
                         </div>
 
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-2.5 rounded-xl">
-                            <div className="flex items-center gap-2 overflow-hidden">
-                              <User size={14} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
-                              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{account.username}</span>
-                            </div>
-                            <button 
-                              onClick={() => copyToClipboard(account.username, account.id + '-u')}
-                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
-                            >
-                              {copyStatus[account.id + '-u'] ? <Check size={14} /> : <Copy size={14} />}
-                            </button>
-                          </div>
-
-                          <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-2.5 rounded-xl">
-                            <div className="flex items-center gap-2 overflow-hidden">
-                              <Lock size={14} className="text-slate-400 dark:text-slate-500 flex-shrink-0" />
-                              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">••••••••</span>
-                            </div>
-                            <button 
-                              onClick={() => copyToClipboard(account.password, account.id + '-p')}
-                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
-                            >
-                              {copyStatus[account.id + '-p'] ? <Check size={14} /> : <Copy size={14} />}
-                            </button>
-                          </div>
+                        <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-700/50 p-1.5 rounded-lg text-[11px]">
+                          <span className="text-slate-600 dark:text-slate-400 truncate font-mono">
+                            usn: {account.username} || pass: ••••••••
+                          </span>
+                          <button
+                            onClick={() => {
+                              const text = `usn: ${account.username} || pass: ${account.password}`;
+                              navigator.clipboard.writeText(text);
+                              setCopyStatus({ ...copyStatus, [account.id]: true });
+                              setTimeout(() => setCopyStatus({ ...copyStatus, [account.id]: false }), 2000);
+                            }}
+                            className="flex items-center gap-1 px-2.5 py-1.5 bg-indigo-100 dark:bg-indigo-900/40 hover:bg-indigo-200 dark:hover:bg-indigo-800/50 text-indigo-700 dark:text-indigo-300 rounded-lg font-medium flex-shrink-0 ml-2 transition-colors"
+                          >
+                            {copyStatus[account.id] ? <Check size={14} /> : <Copy size={14} />}
+                            <span className="text-[11px]">{copyStatus[account.id] ? "Copied" : "Copy"}</span>
+                          </button>
                         </div>
 
-                        <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
+                        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center justify-between">
                           {canToggle ? (
                             <button 
                               onClick={() => toggleStatus(account)}
-                              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                              className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold transition-all ${
                                 account.status === 'available' 
                                   ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50' 
                                   : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
                               }`}
                             >
                               {account.status === 'available' ? (
-                                <><ShoppingCart size={14} /> Mark as Sold</>
+                                <><ShoppingCart size={11} /> Mark as Sold</>
                               ) : (
-                                <><RefreshCw size={14} /> Put Back to Sale</>
+                                <><RefreshCw size={11} /> Put Back to Sale</>
                               )}
                             </button>
                           ) : (
-                            <span className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold ${
+                            <span className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-semibold ${
                               account.status === 'available' 
                                 ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' 
                                 : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
                             }`}>
                               {account.status === 'available' ? (
-                                <><ShoppingCart size={14} /> Available</>
+                                <><ShoppingCart size={11} /> Available</>
                               ) : (
-                                <><RefreshCw size={14} /> Sold</>
+                                <><RefreshCw size={11} /> Sold</>
                               )}
                             </span>
                           )}
                           
-                          <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 text-xs">
-                            <Shield size={14} />
-                            <span>Secure Storage</span>
+                          <div className="flex items-center gap-1 text-slate-400 dark:text-slate-500 text-[10px]">
+                            <Shield size={11} />
+                            <span>Secure</span>
                           </div>
                         </div>
                       </div>
