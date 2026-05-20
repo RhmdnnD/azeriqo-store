@@ -1,10 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaLibSql } from "@prisma/adapter-libsql";
 
-const url = process.env["TURSO_DATABASE_URL"] || "file:./dev.db";
-const authToken = process.env["TURSO_AUTH_TOKEN"];
-const adapter = new PrismaLibSql({ url, authToken: authToken || undefined });
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
   const count = await prisma.user.count();
