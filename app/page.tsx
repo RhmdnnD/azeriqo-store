@@ -85,7 +85,7 @@ export default function LandingPage() {
           </div>
 
           <button
-            onClick={() => router.push(user ? "/store" : "/login")}
+            onClick={() => router.push("/store")}
             className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-medium text-base transition-all shadow-sm shadow-indigo-200 dark:shadow-indigo-900/30 active:scale-95"
           >
             <StoreIcon size={20} />
