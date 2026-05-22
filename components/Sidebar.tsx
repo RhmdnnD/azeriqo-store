@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Store, Folder, LogOut, Sun, Moon, ShieldCheck, Wrench, User } from "lucide-react";
+import { Store, Folder, LogOut, Sun, Moon, ShieldCheck, Wrench, User, Users } from "lucide-react";
 
 interface UserData {
   id: string;
@@ -115,6 +115,19 @@ export default function Sidebar() {
               Categories
             </button>
           </>
+        )}
+        {user.role === "ADMIN" && (
+          <button
+            onClick={() => router.push("/admin/users")}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              pathname.startsWith("/admin")
+                ? "bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+            }`}
+          >
+            <Users size={18} />
+            Users
+          </button>
         )}
         <button
           onClick={() => router.push("/profile")}
