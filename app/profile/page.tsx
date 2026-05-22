@@ -31,6 +31,9 @@ export default function ProfilePage() {
   const [error, setError] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [verifyMsg, setVerifyMsg] = useState("");
+  const [verificationCode, setVerificationCode] = useState("");
+  const [codeSent, setCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
 
   // Check URL params for OAuth link feedback
   if (typeof window !== "undefined") {
@@ -57,6 +60,23 @@ export default function ProfilePage() {
     return () => { cancelled = true; };
   }, [router]);
 
+  const handleSendCode = async () => {
+    setSendingCode(true);
+    setError("");
+    try {
+      const res = await fetch("/api/auth/send-change-code", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send code");
+      setCodeSent(true);
+      setVerificationCode("");
+      setVerifyMsg(data.devCode ? `Dev code: ${data.devCode}` : "Verification code sent to your email");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send code");
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -71,6 +91,14 @@ export default function ProfilePage() {
         body.currentPassword = currentPassword;
         body.newPassword = newPassword;
       }
+
+      const hasSensitive = email !== user?.email || !!newPassword;
+      if (hasSensitive && !verificationCode) {
+        setError("Enter the verification code sent to your email");
+        setSaving(false);
+        return;
+      }
+      if (hasSensitive) body.verificationCode = verificationCode;
 
       if (Object.keys(body).length === 0) {
         setError("No changes to save");
@@ -95,6 +123,8 @@ export default function ProfilePage() {
       setEmail(updated.email);
       setCurrentPassword("");
       setNewPassword("");
+      setVerificationCode("");
+      setCodeSent(false);
       setSuccess("Profile updated successfully");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update profile");
@@ -326,9 +356,45 @@ export default function ProfilePage() {
               </div>
             </div>
 
+            {(email !== user?.email || newPassword) && !codeSent && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleSendCode}
+                  disabled={sendingCode}
+                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm active:scale-95"
+                >
+                  {sendingCode ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
+                  {sendingCode ? "Sending..." : "Send Verification Code"}
+                </button>
+              </div>
+            )}
+
+            {codeSent && (
+              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 space-y-4">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                  <KeyRound size={16} />
+                  Verification Code
+                </h2>
+                {verifyMsg && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">{verifyMsg}</p>
+                )}
+                <input
+                  required
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-center text-lg tracking-[8px] font-mono"
+                  value={verificationCode}
+                  onChange={e => setVerificationCode(e.target.value)}
+                  maxLength={6}
+                  autoFocus
+                />
+              </div>
+            )}
+
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || (codeSent && verificationCode.length !== 6)}
               className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white py-2.5 rounded-xl font-medium transition-all shadow-sm active:scale-95"
             >
               {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}

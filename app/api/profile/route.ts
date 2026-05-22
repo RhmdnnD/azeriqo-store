@@ -24,7 +24,34 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json();
-    const { name, email, currentPassword, newPassword } = body;
+    const { name, email, currentPassword, newPassword, verificationCode } = body;
+
+    const hasSensitiveChange = email !== undefined || newPassword !== undefined;
+
+    if (hasSensitiveChange) {
+      if (!verificationCode) {
+        return NextResponse.json({ error: "Verification code is required" }, { status: 400 });
+      }
+
+      const valid = await prisma.verificationCode.findFirst({
+        where: {
+          userId: user.id,
+          code: verificationCode,
+          used: false,
+          expiresAt: { gt: new Date() },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+
+      if (!valid) {
+        return NextResponse.json({ error: "Invalid or expired verification code" }, { status: 400 });
+      }
+
+      await prisma.verificationCode.update({
+        where: { id: valid.id },
+        data: { used: true },
+      });
+    }
 
     const data: Record<string, string> = {};
 
