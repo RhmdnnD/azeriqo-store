@@ -26,6 +26,8 @@ model Account {
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+
+  @@index([status])
 }
 
 model User {

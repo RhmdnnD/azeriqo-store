@@ -56,23 +56,16 @@ export default function AccountStore() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      fetch("/api/auth/me").then(r => r.ok ? r.json() : null),
-      fetch("/api/categories").then(r => r.ok ? r.json() : []),
-    ])
-      .then(([userData, cats]) => {
-        if (cancelled) return;
-        if (!userData) { router.push("/login?redirect=/store"); return; }
-        setUser(userData);
-        if (Array.isArray(cats)) setCategories(cats);
-        return fetch("/api/accounts");
-      })
-      .then(res => {
-        if (res) return res.json();
-      })
+    fetch("/api/store-data")
+      .then(res => res.ok ? res.json() : null)
       .then(data => {
-        if (cancelled) return;
-        if (Array.isArray(data)) setAccounts(data);
+        if (cancelled || !data) {
+          if (!data) router.push("/login?redirect=/store");
+          return;
+        }
+        setUser(data.user);
+        if (Array.isArray(data.categories)) setCategories(data.categories);
+        if (Array.isArray(data.accounts)) setAccounts(data.accounts);
       })
       .catch(() => { if (!cancelled) router.push("/login?redirect=/store"); })
       .finally(() => { if (!cancelled) setLoading(false); });
