@@ -8,6 +8,9 @@ export async function GET() {
     if (!user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
+    if (user.role === "USER") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const [accounts, categories] = await Promise.all([
       prisma.account.findMany({

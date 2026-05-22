@@ -59,10 +59,9 @@ export default function AccountStore() {
     fetch("/api/store-data")
       .then(res => res.ok ? res.json() : null)
       .then(data => {
-        if (cancelled || !data) {
-          if (!data) router.push("/login?redirect=/store");
-          return;
-        }
+        if (cancelled) return;
+        if (!data) { router.push("/login?redirect=/store"); return; }
+        if (data.user?.role === "USER") { router.push("/profile"); return; }
         setUser(data.user);
         if (Array.isArray(data.categories)) setCategories(data.categories);
         if (Array.isArray(data.accounts)) setAccounts(data.accounts);

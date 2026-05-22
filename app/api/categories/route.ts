@@ -4,6 +4,10 @@ import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
   try {
+    const user = await getCurrentUser();
+    if (!user || user.role === "USER") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const categories = await prisma.category.findMany({
       orderBy: { name: "asc" },
       include: { _count: { select: { accounts: true } } },

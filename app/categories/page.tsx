@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Plus, Edit2, Trash2, Check, X, Loader2, Folder } from "lucide-react";
 import Sidebar from "@/components/Sidebar";
 
@@ -11,6 +12,7 @@ interface Category {
 }
 
 export default function CategoriesPage() {
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState("");
@@ -31,13 +33,19 @@ export default function CategoriesPage() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/categories")
-      .then(res => res.json())
+    fetch("/api/auth/me")
+      .then(res => res.ok ? res.json() : null)
+      .then(userData => {
+        if (cancelled) return;
+        if (!userData || userData.role === "USER") { router.push("/profile"); return; }
+        return fetch("/api/categories");
+      })
+      .then(res => res && res.json())
       .then(data => { if (!cancelled && Array.isArray(data)) setCategories(data); })
       .catch(e => { if (!cancelled) console.error("Failed to fetch categories", e); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [router]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
