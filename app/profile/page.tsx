@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import VerificationPopup from "@/components/VerificationPopup";
 import { User, Mail, Lock, Save, Loader2, Eye, EyeOff, Check, Shield, KeyRound, Send, ShieldCheck, Link2 } from "lucide-react";
 
 interface UserData {
@@ -23,19 +24,19 @@ export default function ProfilePage() {
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [linkedProviders, setLinkedProviders] = useState<string[]>([]);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+
+  const [showPopup, setShowPopup] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verifyMsg, setVerifyMsg] = useState("");
-  const [verificationCode, setVerificationCode] = useState("");
-  const [codeSent, setCodeSent] = useState(false);
-  const [sendingCode, setSendingCode] = useState(false);
 
-  // Check URL params for OAuth link feedback
   if (typeof window !== "undefined") {
     const params = new URLSearchParams(window.location.search);
     if (params.get("success") === "oauth_linked" && !success) setSuccess("OAuth account linked successfully");
@@ -60,52 +61,30 @@ export default function ProfilePage() {
     return () => { cancelled = true; };
   }, [router]);
 
+  const hasPasswordChanges = !!currentPassword && !!newPassword && !!confirmPassword;
+  const passwordsMatch = newPassword === confirmPassword;
+  const canRequestVerify = hasPasswordChanges && passwordsMatch && newPassword.length >= 8;
+
   const handleSendCode = async () => {
-    setSendingCode(true);
     setError("");
-    try {
-      const res = await fetch("/api/auth/send-change-code", { method: "POST" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to send code");
-      setCodeSent(true);
-      setVerificationCode("");
-      setVerifyMsg(data.devCode ? `Dev code: ${data.devCode}` : "Verification code sent to your email");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send code");
-    } finally {
-      setSendingCode(false);
-    }
+    setVerifyMsg("");
+    const res = await fetch("/api/auth/send-change-code", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to send code");
+    setVerifyMsg(data.devCode ? `Dev code: ${data.devCode}` : "A code has been sent to your email");
   };
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleVerify = async (code: string) => {
     setError("");
-    setSuccess("");
     setSaving(true);
-
     try {
-      const body: Record<string, string> = {};
+      const body: Record<string, string> = {
+        currentPassword,
+        newPassword,
+        verificationCode: code,
+      };
       if (name !== user?.name) body.name = name;
       if (email !== user?.email) body.email = email;
-      if (newPassword) {
-        if (newPassword.length < 8) throw new Error("Password must be at least 8 characters");
-        body.currentPassword = currentPassword;
-        body.newPassword = newPassword;
-      }
-
-      const hasSensitive = email !== user?.email || !!newPassword;
-      if (hasSensitive && !verificationCode) {
-        setError("Enter the verification code sent to your email");
-        setSaving(false);
-        return;
-      }
-      if (hasSensitive) body.verificationCode = verificationCode;
-
-      if (Object.keys(body).length === 0) {
-        setError("No changes to save");
-        setSaving(false);
-        return;
-      }
 
       const res = await fetch("/api/profile", {
         method: "PUT",
@@ -124,11 +103,11 @@ export default function ProfilePage() {
       setEmail(updated.email);
       setCurrentPassword("");
       setNewPassword("");
-      setVerificationCode("");
-      setCodeSent(false);
-      setSuccess("Profile updated successfully");
+      setConfirmPassword("");
+      setShowPopup(false);
+      setSuccess("Password changed successfully");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update profile");
+      throw err;
     } finally {
       setSaving(false);
     }
@@ -181,7 +160,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <form onSubmit={handleSave} className="space-y-6">
+          <div className="space-y-6">
             {error && (
               <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 text-sm rounded-xl px-4 py-3">
                 {error}
@@ -270,7 +249,6 @@ export default function ProfilePage() {
                 <KeyRound size={16} />
                 Change Password
               </h2>
-              <p className="text-xs text-slate-400 dark:text-slate-500 -mt-2">Leave blank to keep current password</p>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Current Password</label>
@@ -300,7 +278,7 @@ export default function ProfilePage() {
                   <input
                     type={showNew ? "text" : "password"}
                     className="w-full pl-10 pr-10 py-2 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
-                    placeholder="Enter new password"
+                    placeholder="Enter new password (min 8 characters)"
                     value={newPassword}
                     onChange={e => setNewPassword(e.target.value)}
                   />
@@ -312,7 +290,53 @@ export default function ProfilePage() {
                     {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+                {newPassword && newPassword.length < 8 && (
+                  <p className="text-xs text-red-500 dark:text-red-400">Minimum 8 characters</p>
+                )}
               </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Confirm New Password</label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" size={18} />
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    className="w-full pl-10 pr-10 py-2 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
+                    placeholder="Re-enter new password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                  >
+                    {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+                {confirmPassword && newPassword !== confirmPassword && (
+                  <p className="text-xs text-red-500 dark:text-red-400">Passwords do not match</p>
+                )}
+              </div>
+
+              {canRequestVerify && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setError("");
+                    try {
+                      await handleSendCode();
+                      setShowPopup(true);
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : "Failed to send code");
+                    }
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl font-medium transition-all shadow-sm active:scale-95"
+                >
+                  <KeyRound size={18} />
+                  Verify & Save
+                </button>
+              )}
             </div>
 
             {/* Linked Accounts */}
@@ -357,60 +381,22 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {(email !== user?.email || newPassword) && !codeSent && (
-              <div className="flex justify-center">
-                <button
-                  type="button"
-                  onClick={handleSendCode}
-                  disabled={sendingCode}
-                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white px-5 py-2.5 rounded-xl font-medium transition-all shadow-sm active:scale-95"
-                >
-                  {sendingCode ? <Loader2 className="animate-spin" size={18} /> : <Send size={18} />}
-                  {sendingCode ? "Sending..." : "Send Verification Code"}
-                </button>
+            <footer className="pt-6 border-t border-slate-200 dark:border-slate-700 text-center text-slate-400 dark:text-slate-500 text-xs">
+              <div className="flex items-center justify-center gap-1">
+                <Shield size={12} />
+                <span>Account ID: {user.id}</span>
               </div>
-            )}
-
-            {codeSent && (
-              <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-6 space-y-4">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                  <KeyRound size={16} />
-                  Verification Code
-                </h2>
-                {verifyMsg && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">{verifyMsg}</p>
-                )}
-                <input
-                  required
-                  type="text"
-                  placeholder="Enter 6-digit code"
-                  className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 text-center text-lg tracking-[8px] font-mono"
-                  value={verificationCode}
-                  onChange={e => setVerificationCode(e.target.value)}
-                  maxLength={6}
-                  autoFocus
-                />
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={saving || (codeSent && verificationCode.length !== 6)}
-              className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white py-2.5 rounded-xl font-medium transition-all shadow-sm active:scale-95"
-            >
-              {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-              {saving ? "Saving..." : "Save Changes"}
-            </button>
-          </form>
-
-          <footer className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700 text-center text-slate-400 dark:text-slate-500 text-xs">
-            <div className="flex items-center justify-center gap-1">
-              <Shield size={12} />
-              <span>Account ID: {user.id}</span>
-            </div>
-          </footer>
+            </footer>
+          </div>
         </div>
       </main>
+
+      <VerificationPopup
+        open={showPopup}
+        onClose={() => setShowPopup(false)}
+        onVerify={handleVerify}
+        onResend={handleSendCode}
+      />
     </div>
   );
 }

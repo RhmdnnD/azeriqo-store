@@ -47,9 +47,16 @@ export async function PUT(request: Request) {
         return NextResponse.json({ error: "Invalid or expired verification code" }, { status: 400 });
       }
 
-      await prisma.verificationCode.update({
-        where: { id: valid.id },
-        data: { used: true },
+      // Cleanup used + expired codes for this user
+      await prisma.verificationCode.deleteMany({
+        where: {
+          userId: user.id,
+          OR: [
+            { id: valid.id },
+            { expiresAt: { lt: new Date() } },
+            { used: true },
+          ],
+        },
       });
     }
 
