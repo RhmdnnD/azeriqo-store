@@ -6,6 +6,11 @@ const SESSION_COOKIE = "session_token";
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 const INACTIVITY_LIMIT_MS = 3 * 24 * 60 * 60 * 1000;
 
+export function validatePassword(password: string): string | null {
+  if (password.length < 8) return "Password must be at least 8 characters";
+  return null;
+}
+
 export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString("hex");
   const derivedKey = scryptSync(password, salt, 64).toString("hex");

@@ -88,6 +88,7 @@ export default function ProfilePage() {
       if (name !== user?.name) body.name = name;
       if (email !== user?.email) body.email = email;
       if (newPassword) {
+        if (newPassword.length < 8) throw new Error("Password must be at least 8 characters");
         body.currentPassword = currentPassword;
         body.newPassword = newPassword;
       }

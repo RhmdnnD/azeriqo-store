@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, hashPassword } from "@/lib/auth";
+import { getCurrentUser, hashPassword, validatePassword } from "@/lib/auth";
 
 export async function PUT(
   request: Request,
@@ -29,6 +29,8 @@ export async function PUT(
     }
 
     if (body.password) {
+      const pwError = validatePassword(body.password);
+      if (pwError) return NextResponse.json({ error: pwError }, { status: 400 });
       data.password = hashPassword(body.password);
     }
 

@@ -26,6 +26,10 @@ function LoginForm() {
     setError("");
 
     try {
+      if (form.password.length < 8) {
+        throw new Error("Password must be at least 8 characters");
+      }
+
       if (isRegister) {
         const res = await fetch("/api/auth/register", {
           method: "POST",

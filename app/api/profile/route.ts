@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser, hashPassword, verifyPassword } from "@/lib/auth";
+import { getCurrentUser, hashPassword, verifyPassword, validatePassword } from "@/lib/auth";
 
 export async function GET() {
   const user = await getCurrentUser();
@@ -68,6 +68,8 @@ export async function PUT(request: Request) {
     }
 
     if (newPassword !== undefined) {
+      const pwError = validatePassword(newPassword);
+      if (pwError) return NextResponse.json({ error: pwError }, { status: 400 });
       if (!currentPassword) {
         return NextResponse.json({ error: "Current password is required" }, { status: 400 });
       }

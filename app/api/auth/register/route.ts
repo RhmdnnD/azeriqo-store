@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hashPassword } from "@/lib/auth";
+import { hashPassword, validatePassword } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
@@ -8,6 +8,9 @@ export async function POST(request: Request) {
     if (!name || !email || !password) {
       return NextResponse.json({ error: "Name, email, and password required" }, { status: 400 });
     }
+
+    const pwError = validatePassword(password);
+    if (pwError) return NextResponse.json({ error: pwError }, { status: 400 });
 
     if (!email.endsWith("@gmail.com")) {
       return NextResponse.json({ error: "Only Gmail addresses are allowed" }, { status: 400 });
