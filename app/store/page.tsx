@@ -57,11 +57,13 @@ export default function AccountStore() {
   useEffect(() => {
     let cancelled = false;
     fetch("/api/store-data")
-      .then(res => res.ok ? res.json() : null)
+      .then(async res => {
+        if (res.status === 403) { router.push("/profile"); return null; }
+        if (!res.ok) { router.push("/login?redirect=/store"); return null; }
+        return res.json();
+      })
       .then(data => {
-        if (cancelled) return;
-        if (!data) { router.push("/login?redirect=/store"); return; }
-        if (data.user?.role === "USER") { router.push("/profile"); return; }
+        if (cancelled || !data) return;
         setUser(data.user);
         if (Array.isArray(data.categories)) setCategories(data.categories);
         if (Array.isArray(data.accounts)) setAccounts(data.accounts);
