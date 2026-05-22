@@ -4,6 +4,7 @@ import { randomBytes, scryptSync } from "crypto";
 
 const SESSION_COOKIE = "session_token";
 const SESSION_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
+const INACTIVITY_LIMIT_MS = 3 * 24 * 60 * 60 * 1000;
 
 export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString("hex");
@@ -20,7 +21,9 @@ export function verifyPassword(password: string, hash: string): boolean {
 export async function createSession(userId: string): Promise<string> {
   const token = randomBytes(48).toString("hex");
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
-  await prisma.session.create({ data: { token, userId, expiresAt } });
+  await prisma.session.create({
+    data: { token, userId, expiresAt, lastActiveAt: new Date() },
+  });
   return token;
 }
 
@@ -29,11 +32,26 @@ export async function getSession(token: string) {
     where: { token },
     include: { user: true },
   });
-  if (!session || session.expiresAt < new Date()) {
-    if (session) await prisma.session.delete({ where: { id: session.id } });
+  if (!session) return null;
+
+  const now = new Date();
+  const expired = session.expiresAt < now;
+  const inactive =
+    now.getTime() - session.lastActiveAt.getTime() > INACTIVITY_LIMIT_MS;
+
+  if (expired || inactive) {
+    await prisma.session.delete({ where: { id: session.id } });
     return null;
   }
+
   return session;
+}
+
+export async function touchSession(token: string) {
+  await prisma.session.update({
+    where: { token },
+    data: { lastActiveAt: new Date() },
+  });
 }
 
 export async function destroySession(token: string) {
@@ -45,7 +63,10 @@ export async function getCurrentUser() {
   const token = cookieStore.get(SESSION_COOKIE)?.value;
   if (!token) return null;
   const session = await getSession(token);
+  if (session) {
+    touchSession(token).catch(() => {});
+  }
   return session?.user ?? null;
 }
 
-export { SESSION_COOKIE, SESSION_DURATION_MS };
+export { SESSION_COOKIE, SESSION_DURATION_MS, INACTIVITY_LIMIT_MS };
